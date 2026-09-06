@@ -1,0 +1,23 @@
+{
+  "name": "control",
+  "image": "ghcr.io/e-st/bellen:1.1.0",
+  "containerEnv": {
+    "REPOS": "e-St/fspure,e-St/fspure-ready-lib,e-St/fstarter",
+    "PLATFORM": "/workspaces/platform"
+  },
+  "forwardPorts": [
+    8000
+  ],
+  "portsAttributes": {
+    "8000": {
+      "label": "agent-canvas",
+      "onAutoForward": "openPreview",
+      "visibility": "org"
+    }
+  },
+  "otherPortsAttributes": {
+    "onAutoForward": "ignore"
+  },
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+  "waitFor": "postStartCommand"
+}
