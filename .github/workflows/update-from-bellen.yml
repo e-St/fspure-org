@@ -19,7 +19,7 @@ jobs:
     if: github.event.repository.name != 'bellen'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Apply latest control files from bellen
         env:
