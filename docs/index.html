@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>bellen — initialize a control repo</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --ink: #1c1917;
+      --muted: #57534e;
+      --card: #fffdf8;
+      --line: #d6cfc3;
+      --accent: #0f6b4c;
+      --accent-ink: #fff;
+      --warn-bg: #fde8d0;
+      --err: #9f1239;
+      --ok: #0f6b4c;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 16px/1.5 var(--sans);
+      color: var(--ink);
+      background: var(--bg);
+    }
+    main {
+      max-width: 40rem;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+    .logo {
+      display: block;
+      width: 100%;
+      height: auto;
+      margin: 0 0 1.25rem;
+    }
+    h1 { font-size: 1.6rem; margin: 0 0 0.35rem; }
+    .lede { color: var(--muted); margin: 0 0 1.5rem; }
+    label code, p code, .status code, .hint code {
+      font-family: var(--mono);
+      font-size: 0.88em;
+      background: #ece6db;
+      padding: 0.05em 0.35em;
+      border-radius: 3px;
+    }
+    form {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 1.25rem 1.25rem 1.5rem;
+      margin-top: 0;
+    }
+    .step {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.35rem;
+      height: 1.35rem;
+      margin-right: 0.4rem;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .field { margin-top: 1.35rem; }
+    .field:first-child { margin-top: 0; }
+    label { display: block; font-weight: 600; margin: 0 0 0.35rem; }
+    .hint { display: block; font-weight: 400; color: var(--muted); font-size: 0.9rem; margin-top: 0.15rem; }
+    .preview { margin: 0.45rem 0 0; font: 0.88rem/1.4 var(--mono); color: var(--muted); white-space: pre-wrap; }
+    .preview.err { color: var(--err); }
+    .cta {
+      background: #e7f3ee;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      margin-top: 1rem;
+    }
+    .cta p { margin: 0.4rem 0; }
+    .cta a.btn {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 0.6rem 0.95rem;
+      border-radius: 6px;
+      margin: 0.35rem 0 0.5rem;
+    }
+    input[type="text"], input[type="password"], textarea {
+      width: 100%;
+      font: 15px/1.4 var(--mono);
+      padding: 0.55rem 0.65rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+    }
+    textarea { min-height: 7rem; resize: vertical; }
+    .row-inline { display: flex; gap: 0.5rem; align-items: center; }
+    .row-inline input { flex: 1; }
+    button {
+      margin-top: 1.25rem;
+      background: var(--accent);
+      color: var(--accent-ink);
+      border: 0;
+      border-radius: 6px;
+      padding: 0.7rem 1.1rem;
+      font: 600 1rem var(--sans);
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .warn {
+      background: var(--warn-bg);
+      border-radius: 6px;
+      padding: 0.7rem 0.85rem;
+      font-size: 0.92rem;
+      margin-top: 1rem;
+    }
+    .status {
+      margin-top: 1.25rem;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      white-space: pre-wrap;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+    }
+    .status.ok { border-color: var(--ok); }
+    .status.err { border-color: var(--err); color: var(--err); }
+    .status a { color: var(--accent); word-break: break-all; }
+    footer { margin-top: 2rem; color: var(--muted); font-size: 0.9rem; }
+    .safe {
+      margin-top: 1.35rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.7rem 0.95rem 0.85rem;
+      background: var(--bg);
+    }
+    .safe summary { cursor: pointer; font-weight: 600; }
+    .safe .body { margin-top: 0.75rem; }
+    .safe .body p { margin: 0.55rem 0; }
+    .safe .body code { font-family: var(--mono); font-size: 0.88em; background: #ece6db; padding: 0.05em 0.35em; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="logo" src="logo.jpg" alt="bellen">
+    <h1>bellen</h1>
+    <p class="lede">Initialize a thin control repo (<code>*-org</code>) with Agent Canvas + Grok Build. Product code stays in other repos.</p>
+    <form id="form" novalidate>
+      <div class="field">
+        <label for="repo">
+          <span class="step">1</span> Control repo
+          <span class="hint">Create <code>OWNER/something-org</code> from the <a href="https://github.com/e-St/bellen">e-St/bellen</a> template, then type that <code>owner/name</code> here. Not a product repo.</span>
+        </label>
+        <input id="repo" type="text" autocomplete="off" spellcheck="false" placeholder="OWNER/something-org" required>
+      </div>
+      <div class="field">
+        <label for="products">
+          <span class="step">2</span> Product repos
+          <span class="hint">One <code>owner/name</code> per line. Cloned into <code>/workspaces/platform</code>. After this, a GitHub token link appears — this page cannot mint a PAT.</span>
+        </label>
+        <textarea id="products" placeholder="OWNER/something&#10;OWNER/something-lib"></textarea>
+        <p id="productPreview" class="preview" hidden></p>
+      </div>
+      <details class="safe">
+        <summary>Why your PAT is safe on this page.</summary>
+        <div class="body">
+          <p>This site is static GitHub Pages with no server of ours, so the token is never stored, logged, or sent to e-St.</p>
+          <p>Your browser talks only to <code>api.github.com</code>, and only to open a branch and pull request on the control repo you named.</p>
+          <p>Use a fine-grained token limited to that one repo (Contents + Pull requests) with a short expiry, then revoke it once the PR exists.</p>
+          <p><strong>Without pasting a PAT here:</strong> clone <code>OWNER/something-org</code> with <code>gh</code> (already logged in as you), branch <code>init/control-canvas</code>, add <code>AGENTS.md</code>, a short control <code>README.md</code>, <code>.devcontainer/{devcontainer.json,Dockerfile,post-start.sh}</code> (<code>FROM ghcr.io/e-st/bellen:&lt;version&gt;</code>, <code>containerEnv.REPOS</code> = your product <code>owner/name</code> list, <code>PLATFORM=/workspaces/platform</code>, forward only port 8000), <code>.github/dependabot.yml</code>, and <code>.github/workflows/agent.md</code>, push, and open a PR into <code>main</code>. Your own <code>gh</code> login can write workflow files; Actions <code>GITHUB_TOKEN</code> cannot. You can also add those files in GitHub’s web editor on a new branch. The easy path below is optional.</p>
+        </div>
+      </details>
+      <div id="patCreate" class="cta" hidden>
+        <p><strong>Yes — you create the PAT on GitHub.</strong> This page cannot issue one.</p>
+        <p>
+          <a class="btn" id="patCreateLink" href="#" target="_blank" rel="noopener">Create the token on GitHub</a>
+        </p>
+        <p><strong>Choose only the control (*-org) repo</strong> — not all repositories, not the product repos.</p>
+        <p class="hint" id="patCreateHint"></p>
+      </div>
+      <div class="field">
+        <label for="pat">
+          <span class="step">3</span> Paste the token
+          <span class="hint">Then click <strong>Create PR</strong>. After that: merge, secrets, App, labels, <code>gh aw compile</code>. Sent only to <code>api.github.com</code>, not stored. <strong>Show</strong> reveals the characters.</span>
+        </label>
+        <div class="row-inline">
+          <input id="pat" type="password" autocomplete="off" required>
+          <button type="button" id="togglePat" style="margin-top:0;background:#57534e;">Show</button>
+        </div>
+      </div>
+      <p class="warn">This writes <code>AGENTS.md</code>, a short <code>README.md</code>, <code>.devcontainer/*</code> (image <code>ghcr.io/e-st/bellen</code>, port 8000 only), <code>.github/dependabot.yml</code>, <code>.github/workflows/agent.md</code>, and <code>.github/workflows/update-from-bellen.yml</code> (the <strong>Update from bellen</strong> button) on branch <code>init/control-canvas</code>. It does not merge and does not push to <code>main</code>. Workflows permission is required because GitHub treats those as workflow files.</p>
+      <button type="submit" id="go">Create PR</button>
+    </form>
+    <div id="status" class="status" hidden></div>
+    <footer>
+      Template and docs: <a href="https://github.com/e-St/bellen">github.com/e-St/bellen</a><br>
+      MIT License · Copyright (c) 2025–2026 e-St ·
+      <a href="legal.html">Legal</a> ·
+      <a href="privacy.html">Privacy</a>
+    </footer>
+  </main>
+  <script>
+(function () {
+  var BRANCH = "init/control-canvas";
+  var API = "https://api.github.com";
+  var IMAGE = "ghcr.io/e-st/bellen:1.1.0";
+
+  var form = document.getElementById("form");
+  var statusEl = document.getElementById("status");
+  var go = document.getElementById("go");
+  var repoInput = document.getElementById("repo");
+  var productsInput = document.getElementById("products");
+  var patInput = document.getElementById("pat");
+  var productPreview = document.getElementById("productPreview");
+  var patCreate = document.getElementById("patCreate");
+  var patCreateLink = document.getElementById("patCreateLink");
+  var patCreateHint = document.getElementById("patCreateHint");
+
+  document.getElementById("togglePat").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    var reveal = patInput.type === "password";
+    patInput.type = reveal ? "text" : "password";
+    this.textContent = reveal ? "Hide" : "Show";
+    patInput.focus();
+  });
+
+  var params = new URLSearchParams(location.search);
+  var q = params.get("repo") || "";
+  q = q.replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/, "").replace(/\/$/, "");
+  if (q) repoInput.value = q;
+
+  function log(msg, kind) {
+    statusEl.hidden = false;
+    statusEl.className = "status" + (kind ? " " + kind : "");
+    statusEl.textContent = msg;
+  }
+
+  function parseOwnerName(raw, kind) {
+    var s = String(raw || "").trim();
+    s = s.replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/, "").replace(/\/$/, "");
+    var m = s.match(/^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/);
+    if (!m) throw new Error((kind || "Repo") + " must be owner/name (got " + JSON.stringify(String(raw || "").trim() || "(empty)") + ").");
+    return { owner: m[1], name: m[2] };
+  }
+
+  function parseProducts(raw) {
+    var lines = String(raw || "").split(/\r?\n/);
+    var out = [];
+    var seen = {};
+    var errors = [];
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line || line.charAt(0) === "#") continue;
+      try {
+        var spec = parseOwnerName(line, "Product repo");
+        var id = spec.owner + "/" + spec.name;
+        if (seen[id]) continue;
+        seen[id] = true;
+        out.push(id);
+      } catch (e) {
+        errors.push("Line " + (i + 1) + ": " + e.message);
+      }
+    }
+    return { repos: out, errors: errors };
+  }
+
+  function refreshProductPreview() {
+    var parsed = parseProducts(productsInput.value);
+    if (!productsInput.value.trim()) {
+      productPreview.hidden = true;
+      productPreview.textContent = "";
+      return parsed;
+    }
+    productPreview.hidden = false;
+    if (parsed.errors.length) {
+      productPreview.className = "preview err";
+      productPreview.textContent = parsed.errors.join("\n");
+    } else if (!parsed.repos.length) {
+      productPreview.className = "preview";
+      productPreview.textContent = "No product repos yet.";
+    } else {
+      productPreview.className = "preview";
+      productPreview.textContent = "Will clone:\n" + parsed.repos.map(function (r) { return "  " + r; }).join("\n");
+    }
+    return parsed;
+  }
+  function tryControlSpec() {
+    try { return parseOwnerName(repoInput.value, "Control repo"); }
+    catch (e) { return null; }
+  }
+
+  function patCreateUrl(spec) {
+    var q = new URLSearchParams();
+    q.set("name", ("bellen " + spec.name).slice(0, 40));
+    q.set("description", "Create init/control-canvas on " + spec.owner + "/" + spec.name + " from https://e-st.github.io/bellen/. Limit this token to that one repository. Workflows: write is required to add .github/workflows/agent.md.");
+    q.set("target_name", spec.owner);
+    q.set("expires_in", "7");
+    q.set("contents", "write");
+    q.set("pull_requests", "write");
+    q.set("workflows", "write");
+    return "https://github.com/settings/personal-access-tokens/new?" + q.toString();
+  }
+
+  function refreshPatCreate() {
+    var spec = tryControlSpec();
+    var parsed = parseProducts(productsInput.value);
+    var ready = !!(spec && parsed.repos.length && !parsed.errors.length);
+    patCreate.hidden = !ready;
+    if (!ready) return;
+    patCreateLink.href = patCreateUrl(spec);
+    var only = spec.owner + "/" + spec.name;
+    patCreateHint.textContent = "";
+    patCreateHint.appendChild(document.createTextNode("GitHub opens with owner " + spec.owner + ", Contents: write, Pull requests: write, Workflows: write, 7-day expiry. Under Repository access, "));
+    var bold = document.createElement("strong");
+    bold.textContent = "choose only " + only + " — not all repos, not product repos";
+    patCreateHint.appendChild(bold);
+    patCreateHint.appendChild(document.createTextNode(". Generate, copy, paste below, then Create PR."));
+  }
+
+  productsInput.addEventListener("input", function () {
+    refreshProductPreview();
+    refreshPatCreate();
+  });
+  repoInput.addEventListener("input", refreshPatCreate);
+  refreshProductPreview();
+  refreshPatCreate();
+
+  async function gh(path, token, opts) {
+    opts = opts || {};
+    var headers = {
+      Accept: "application/vnd.github+json",
+      Authorization: "Bearer " + token,
+      "X-GitHub-Api-Version": "2022-11-28"
+    };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    var res = await fetch(API + path, {
+      method: opts.method || "GET",
+      headers: headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+    var text = await res.text();
+    var data = null;
+    if (text) {
+      try { data = JSON.parse(text); } catch (e) { data = { message: text }; }
+    }
+    if (!res.ok) {
+      var msg = (data && data.message) ? data.message : (res.status + " " + res.statusText);
+      var err = new Error(msg);
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  }
+
+  function controlDockerfile() {
+    return "# Keep devcontainer.json \"image\" on this same tag.\nFROM " + IMAGE + "\n";
+  }
+
+  function dependabotYml() {
+    return [
+      "version: 2",
+      "updates:",
+      "  - package-ecosystem: docker",
+      "    directory: /.devcontainer",
+      "    schedule:",
+      "      interval: weekly",
+      "  - package-ecosystem: github-actions",
+      "    directory: /",
+      "    schedule:",
+      "      interval: weekly",
+      ""
+    ].join("\n");
+  }
+
+  function postStartSh() {
+    return [
+      "#!/usr/bin/env bash",
+      "export PATH=\"/usr/local/bin:$HOME/.local/bin:$PATH\"",
+      "export TMUX_TMPDIR=\"${TMUX_TMPDIR:-/tmp}\"",
+      "mkdir -p \"${PLATFORM:-/workspaces/platform}\" \"$HOME/.openhands\"",
+      "",
+      "if [ -z \"$LOCAL_BACKEND_API_KEY\" ]; then",
+      "  LOCAL_BACKEND_API_KEY=$(openssl rand -base64 32)",
+      "  export LOCAL_BACKEND_API_KEY",
+      "  umask 077",
+      "  printf '%s\\n' \"$LOCAL_BACKEND_API_KEY\" > \"$HOME/.openhands/local-backend-api-key\"",
+      "  echo \"LOCAL_BACKEND_API_KEY was unset; generated $HOME/.openhands/local-backend-api-key (paste that in the Canvas UI).\"",
+      "fi",
+      "",
+      "if ! curl -sf -o /dev/null --max-time 2 http://127.0.0.1:8000/; then",
+      "  nohup agent-canvas --public --port 8000 >> \"$HOME/.openhands/agent-canvas.log\" 2>&1 &",
+      "  echo $! > \"$HOME/.openhands/agent-canvas.pid\"",
+      "  n=0",
+      "  while [ \"$n\" -lt 90 ]; do",
+      "    curl -sf -o /dev/null --max-time 2 http://127.0.0.1:8000/ && break",
+      "    n=$((n+1))",
+      "    sleep 1",
+      "  done",
+      "  if ! curl -sf -o /dev/null --max-time 2 http://127.0.0.1:8000/; then",
+      "    echo \"Agent Canvas did not bind :8000. Last log:\"",
+      "    tail -50 \"$HOME/.openhands/agent-canvas.log\"",
+      "  fi",
+      "fi",
+      "",
+      "printf 'repos:\\n' > \"$PLATFORM/repos.yml\"",
+      "(",
+      "  IFS=','",
+      "  for spec in $REPOS; do",
+      "    spec=$(printf '%s' \"$spec\" | sed 's/^ *//;s/ *$//')",
+      "    [ -z \"$spec\" ] && continue",
+      "    printf '  - %s\\n' \"$spec\" >> \"$PLATFORM/repos.yml\"",
+      "    dest=\"$PLATFORM/${spec##*/}\"",
+      "    [ -d \"$dest/.git\" ] || gh repo clone \"$spec\" \"$dest\" || echo \"clone failed: $spec\"",
+      "  done",
+      ") >> \"$HOME/.openhands/clone.log\" 2>&1 &",
+      ""
+    ].join("\n");
+  }
+
+  function controlReadme(owner, name, repos) {
+    var list = repos.length
+      ? repos.map(function (r) { return "- `" + r + "`"; }).join("\n")
+      : "- (none listed yet)";
+    return [
+      "# " + name,
+      "",
+      "Thin **control** repo (`" + owner + "/" + name + "`). Product code is not here.",
+      "Created from [bellen](https://github.com/e-St/bellen).",
+      "",
+      "## Update from bellen",
+      "",
+      "[https://github.com/" + owner + "/" + name + "/actions/workflows/update-from-bellen.yml](https://github.com/" + owner + "/" + name + "/actions/workflows/update-from-bellen.yml) → **Run workflow**. That opens a PR with the latest control image and files. Your product repo list is kept. Merge, then rebuild the Codespace.",
+      "",
+      "## Codespace",
+      "",
+      "1. Code → Create codespace on `main` (after merge). Image: `" + IMAGE + "`.",
+      "2. Wait for start (Agent Canvas on port 8000, then product clones).",
+      "3. Ports → **8000** (`agent-canvas`, visibility org). Only this port is forwarded.",
+      "4. Paste `LOCAL_BACKEND_API_KEY` in the Canvas UI (Codespace secret, or `$HOME/.openhands/local-backend-api-key` if unset).",
+      "5. ACP command: `grok agent stdio`",
+      "6. Workspace: `/workspaces/platform`",
+      "",
+      "Product repos cloned there:",
+      "",
+      list,
+      "",
+      "## Labels",
+      "",
+      "| Label | Meaning |",
+      "| --- | --- |",
+      "| `agent` | Unattended gh-aw on Actions. |",
+      "| `canvas` | Interactive Canvas in this Codespace. |",
+      "",
+      "Never apply both to the same issue. File issues on this control repo.",
+      "",
+      "## Inspect",
+      "",
+      "Do not prompt in a product editor. Open the product repo's own Codespace:",
+      "",
+      "`https://codespaces.new/OWNER/PRODUCT?ref=agent/…`",
+      ""
+    ].join("\n");
+  }
+
+  function controlAgents(owner, name, repos) {
+    var list = repos.length
+      ? repos.map(function (r) { return "- `" + r + "`"; }).join("\n")
+      : "- (none listed in `containerEnv.REPOS`)";
+    return [
+      "# " + name,
+      "",
+      "This is the thin control repo `" + owner + "/" + name + "`.",
+      "Product code lives in separate repos. Git is the shared disk.",
+      "",
+      "On Codespace start, product repos are cloned under `/workspaces/platform` from `containerEnv.REPOS`:",
+      "",
+      list,
+      "",
+      "## Labels",
+      "",
+      "- `agent` — unattended work via gh-aw on GitHub Actions. Never combine with `canvas`.",
+      "- `canvas` — interactive work in this control Codespace (Agent Canvas). Never combine with `agent`.",
+      "",
+      "## Interactive (`canvas`)",
+      "",
+      "1. Codespace on **this** repo (not a product repo).",
+      "2. Port 8000 only — Agent Canvas, visibility org. Image `ghcr.io/e-st/bellen`.",
+      "3. ACP: `grok agent stdio`",
+      "4. Workspace: `/workspaces/platform`",
+      "",
+      "Do not prompt inside a product-repo editor. Humans inspect:",
+      "",
+      "`https://codespaces.new/OWNER/PRODUCT?ref=agent/…`",
+      "",
+      "## Unattended (`agent`)",
+      "",
+      "Issues labeled `agent` on this repo run `.github/workflows/agent.md` after a human has run `gh aw compile`.",
+      "Push to the product remotes. Open PRs there.",
+      ""
+    ].join("\n");
+  }
+
+  function agentMd(repos) {
+    var lines = [
+      "---",
+      "# gh-aw source stub. Human: install the extension, choose an engine, set secrets, then run: gh aw compile",
+      "on:",
+      "  issues:",
+      "    types: [labeled]",
+      "permissions: read-all",
+      "---",
+      "",
+      "# Agent",
+      "",
+      "Run only when the issue has the `agent` label and does **not** have `canvas`.",
+      "Never apply both labels.",
+      "",
+      "Work the issue in the product repositories. Git is the shared disk.",
+      "Open a PR on the product repo (branch like `agent/<n>-short-slug`).",
+      "Do not treat clones under `/workspaces/platform` as a substitute for those remotes.",
+      "",
+      "Product repos:",
+      ""
+    ];
+    if (!repos.length) lines.push("- (none listed in containerEnv.REPOS)");
+    else {
+      for (var i = 0; i < repos.length; i++) lines.push("- " + repos[i]);
+    }
+    lines.push("");
+    lines.push("Human: `gh extension install github/gh-aw && gh aw compile`");
+    lines.push("");
+    return lines.join("\n");
+  }
+
+  function updateFromBellenYml() {
+    return [
+      "name: Update from bellen",
+      "",
+      "on:",
+      "  workflow_dispatch:",
+      "    inputs:",
+      "      bellen_ref:",
+      "        description: bellen git ref (branch or tag)",
+      "        default: main",
+      "        required: false",
+      "",
+      "run-name: Update from bellen (${{ inputs.bellen_ref || 'main' }})",
+      "",
+      "permissions:",
+      "  contents: write",
+      "  pull-requests: write",
+      "",
+      "jobs:",
+      "  update:",
+      "    if: github.event.repository.name != 'bellen'",
+      "    runs-on: ubuntu-latest",
+      "    steps:",
+      "      - uses: actions/checkout@v5",
+      "",
+      "      - name: Apply latest control files from bellen",
+      "        env:",
+      "          REF: ${{ inputs.bellen_ref || 'main' }}",
+      "        run: |",
+      "          git clone --depth 1 --branch \"$REF\" https://github.com/e-St/bellen.git \"$RUNNER_TEMP/bellen\"",
+      "          ROOT=\"$GITHUB_WORKSPACE\" BELLEN=\"$RUNNER_TEMP/bellen\" bash \"$RUNNER_TEMP/bellen/control/apply-update.sh\"",
+      "",
+      "      - name: Open or update PR",
+      "        env:",
+      "          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}",
+      "        run: |",
+      "          git config user.name \"github-actions[bot]\"",
+      "          git config user.email \"41898282+github-actions[bot]@users.noreply.github.com\"",
+      "          git add -A",
+      "          if git diff --staged --quiet; then",
+      "            echo \"Already up to date with bellen.\"",
+      "            exit 0",
+      "          fi",
+      "          git checkout -B update/bellen",
+      "          git commit -m \"Update control Codespace from e-St/bellen\"",
+      "          git push -u origin update/bellen --force",
+      "          n=$(gh pr list --head update/bellen --state open --json number --jq '.[0].number // empty')",
+      "          if [ -n \"$n\" ]; then",
+      "            echo \"Updated PR #$n\"",
+      "            gh pr view \"$n\" --web || true",
+      "          else",
+      "            gh pr create \\",
+      "              --title \"Update control Codespace from bellen\" \\",
+      "              --body \"Applies the latest files from [e-St/bellen](https://github.com/e-St/bellen) (image, devcontainer, post-start, Dependabot, AGENTS, README). Keeps \\`containerEnv.REPOS\\`. Merge, then **rebuild** the Codespace (not Restart).\"",
+      "          fi",
+      ""
+    ].join("\n");
+  }
+
+  function filesFor(owner, name, repos) {
+    var dc = {
+      name: "control",
+      image: IMAGE,
+      containerEnv: {
+        REPOS: repos.join(","),
+        PLATFORM: "/workspaces/platform"
+      },
+      forwardPorts: [8000],
+      portsAttributes: {
+        "8000": {
+          label: "agent-canvas",
+          onAutoForward: "openPreview",
+          visibility: "org"
+        }
+      },
+      otherPortsAttributes: { onAutoForward: "ignore" },
+      postStartCommand: "bash .devcontainer/post-start.sh",
+      waitFor: "postStartCommand"
+    };
+    return [
+      { path: "AGENTS.md", mode: "100644", content: controlAgents(owner, name, repos) },
+      { path: "README.md", mode: "100644", content: controlReadme(owner, name, repos) },
+      { path: ".devcontainer/Dockerfile", mode: "100644", content: controlDockerfile() },
+      { path: ".devcontainer/devcontainer.json", mode: "100644", content: JSON.stringify(dc, null, 2) + "\n" },
+      { path: ".devcontainer/post-start.sh", mode: "100755", content: postStartSh() },
+      { path: ".github/dependabot.yml", mode: "100644", content: dependabotYml() },
+      { path: ".github/workflows/agent.md", mode: "100644", content: agentMd(repos) },
+      { path: ".github/workflows/update-from-bellen.yml", mode: "100644", content: updateFromBellenYml() },
+      { path: ".devcontainer/on-create.sh", mode: "100644", sha: null }
+    ];
+  }
+
+  async function branchSha(owner, name, branch, token) {
+    try {
+      var b = await gh("/repos/" + owner + "/" + name + "/branches/" + encodeURIComponent(branch), token);
+      return b.commit.sha;
+    } catch (e) {
+      if (e.status === 404) return null;
+      throw e;
+    }
+  }
+
+  form.addEventListener("submit", async function (ev) {
+    ev.preventDefault();
+    go.disabled = true;
+    var lines = [];
+    function step(s) {
+      lines.push(s);
+      log(lines.join("\n"));
+    }
+    try {
+      var spec = parseOwnerName(repoInput.value, "Control repo");
+      var parsed = refreshProductPreview();
+      if (parsed.errors.length) throw new Error(parsed.errors.join(" "));
+      var repos = parsed.repos;
+      var token = patInput.value.trim();
+      if (!token) throw new Error("PAT is required. Paste it in Fine-grained PAT, then Create PR. Show only reveals the token.");
+
+      step("Reading " + spec.owner + "/" + spec.name + " …");
+      var repo = await gh("/repos/" + spec.owner + "/" + spec.name, token);
+      var base = repo.default_branch || "main";
+
+      var existing = await branchSha(spec.owner, spec.name, BRANCH, token);
+      var parentSha;
+      if (existing) {
+        parentSha = existing;
+        step("Branch " + BRANCH + " exists; adding a commit.");
+      } else {
+        var baseBranch = await gh("/repos/" + spec.owner + "/" + spec.name + "/branches/" + encodeURIComponent(base), token);
+        parentSha = baseBranch.commit.sha;
+        step("Base `" + base + "` @ " + parentSha.slice(0, 7));
+      }
+
+      var parent = await gh("/repos/" + spec.owner + "/" + spec.name + "/git/commits/" + parentSha, token);
+      var treeFiles = filesFor(spec.owner, spec.name, repos).map(function (f) {
+        if (f.sha === null) return { path: f.path, mode: f.mode, type: "blob", sha: null };
+        return { path: f.path, mode: f.mode, type: "blob", content: f.content };
+      });
+      step("Creating tree (" + treeFiles.length + " files) …");
+      var tree = await gh("/repos/" + spec.owner + "/" + spec.name + "/git/trees", token, {
+        method: "POST",
+        body: { base_tree: parent.tree.sha, tree: treeFiles }
+      });
+      var commit = await gh("/repos/" + spec.owner + "/" + spec.name + "/git/commits", token, {
+        method: "POST",
+        body: {
+          message: "Initialize control Codespace (Agent Canvas + Grok Build)",
+          tree: tree.sha,
+          parents: [parentSha]
+        }
+      });
+
+      if (existing) {
+        try {
+          await gh("/repos/" + spec.owner + "/" + spec.name + "/git/refs/heads/" + BRANCH, token, {
+            method: "PATCH",
+            body: { sha: commit.sha }
+          });
+        } catch (e) {
+          if (e.status !== 404) throw e;
+          await gh("/repos/" + spec.owner + "/" + spec.name + "/git/refs/" + encodeURIComponent("heads/" + BRANCH), token, {
+            method: "PATCH",
+            body: { sha: commit.sha }
+          });
+        }
+      } else {
+        await gh("/repos/" + spec.owner + "/" + spec.name + "/git/refs", token, {
+          method: "POST",
+          body: { ref: "refs/heads/" + BRANCH, sha: commit.sha }
+        });
+      }
+      step("Pushed " + BRANCH + " @ " + commit.sha.slice(0, 7));
+
+      var pulls = await gh(
+        "/repos/" + spec.owner + "/" + spec.name + "/pulls?head=" + encodeURIComponent(spec.owner + ":" + BRANCH) + "&state=open",
+        token
+      );
+      var url;
+      if (pulls && pulls.length) {
+        url = pulls[0].html_url;
+        step("Open PR already exists.");
+      } else {
+        var body = [
+          "Adds the thin control Codespace (Agent Canvas + Grok Build).",
+          "Codespace **pulls** `" + IMAGE + "` (gh, Node, uv, Grok, Canvas already installed). No features, no on-create install. Port 8000 only.",
+          "",
+          "Product repos in `containerEnv.REPOS`:",
+          "",
+          (repos.length ? repos.map(function (r) { return "- `" + r + "`"; }).join("\n") : "- (none)"),
+          "",
+          "Includes `.github/workflows/agent.md` (gh-aw stub). Workflow `after-mastart-pr` posts a human checklist. Actions cannot push workflow files with GITHUB_TOKEN.",
+          "",
+          "Do not merge until you have read that checklist. This PR does not set repository secrets or the GitHub App."
+        ].join("\n");
+        var pr = await gh("/repos/" + spec.owner + "/" + spec.name + "/pulls", token, {
+          method: "POST",
+          body: {
+            title: "Initialize control Codespace",
+            head: BRANCH,
+            base: base,
+            body: body
+          }
+        });
+        url = pr.html_url;
+      }
+
+      if (!/^https:\/\/github\.com\//.test(url)) throw new Error("Unexpected PR URL");
+      lines.push("");
+      lines.push("PR: " + url);
+      statusEl.hidden = false;
+      statusEl.className = "status ok";
+      statusEl.textContent = "";
+      statusEl.appendChild(document.createTextNode(lines.slice(0, -1).join("\n") + "\n\nPR: "));
+      var a = document.createElement("a");
+      a.href = url;
+      a.textContent = url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      statusEl.appendChild(a);
+    } catch (e) {
+      log((lines.length ? lines.join("\n") + "\n\n" : "") + "Error: " + (e && e.message ? e.message : e), "err");
+    } finally {
+      go.disabled = false;
+    }
+  });
+})();
+  </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+name: after-mastart-pr
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main]
+    paths:
+      - ".devcontainer/**"
+      - "AGENTS.md"
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  amend:
+    if: startsWith(github.head_ref, 'init/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: gh-aw stub and checklist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          CHECKLIST: |
+            <!-- bellen-checklist -->
+            ## Human checklist
+
+            The initializer PR should include `.github/workflows/agent.md` (gh-aw **source**). Actions cannot push workflow files with `GITHUB_TOKEN` (needs the `workflows` permission on the user PAT). The stub is not compiled yet.
+
+            - [ ] Confirm `.github/workflows/agent.md` is in this PR (if missing: recreate the PAT with **Workflows: write** and run the Pages form again)
+            - [ ] Merge this PR into `main`
+            - [ ] Secrets: `XAI_API_KEY`, `LOCAL_BACKEND_API_KEY`, GitHub App id + private key (`APP_ID`, `APP_PRIVATE_KEY`)
+            - [ ] Install the GitHub App on **this control repo and every product repo** (least privilege: contents, issues, pull requests)
+            - [ ] Create labels `agent` and `canvas`
+            - [ ] `gh extension install github/gh-aw && gh aw compile` — commit the `.lock.yml`
+            - [ ] Codespace on this control repo (image `ghcr.io/e-st/bellen`) → Ports **8000** only (`agent-canvas`, visibility org)
+            - [ ] Agent Canvas ACP: `grok agent stdio` — workspace `/workspaces/platform`
+            - [ ] Dependabot: allow version updates so image/tag bumps open PRs
+            - [ ] Later upgrades: Actions → **Update from bellen** → Run workflow (opens a PR; merge then rebuild the Codespace)
+        run: |
+          if [ ! -f .devcontainer/devcontainer.json ]; then
+            echo "No .devcontainer/devcontainer.json; skip (template repo, not a control repo)."
+            exit 0
+          fi
+
+          if [ ! -f .github/workflows/agent.md ]; then
+            echo "agent.md missing (GITHUB_TOKEN cannot create workflow files). Checklist will say to add Workflows: write and re-run the form."
+          else
+            echo "agent.md present"
+          fi
+
+          if gh api "repos/${{ github.repository }}/issues/${PR}/comments" --jq '.[].body' | grep -q '<!-- bellen-checklist -->'; then
+            echo "checklist comment already present"
+          else
+            gh pr comment "$PR" --body "$CHECKLIST"
+          fi

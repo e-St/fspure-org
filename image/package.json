@@ -1,0 +1,9 @@
+{
+  "name": "bellen-control-image",
+  "private": true,
+  "version": "1.1.0",
+  "description": "Pins @openhands/agent-canvas for the bellen control Codespace image. Dependabot updates this file; bump VERSION when publishing.",
+  "dependencies": {
+    "@openhands/agent-canvas": "1.16.0"
+  }
+}

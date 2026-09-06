@@ -1,0 +1,53 @@
+name: Update from bellen
+
+on:
+  workflow_dispatch:
+    inputs:
+      bellen_ref:
+        description: bellen git ref (branch or tag)
+        default: main
+        required: false
+
+run-name: Update from bellen (${{ inputs.bellen_ref || 'main' }})
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    if: github.event.repository.name != 'bellen'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Apply latest control files from bellen
+        env:
+          REF: ${{ inputs.bellen_ref || 'main' }}
+        run: |
+          git clone --depth 1 --branch "$REF" https://github.com/e-St/bellen.git "$RUNNER_TEMP/bellen"
+          ROOT="$GITHUB_WORKSPACE" BELLEN="$RUNNER_TEMP/bellen" bash "$RUNNER_TEMP/bellen/control/apply-update.sh"
+
+      - name: Open or update PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "Already up to date with bellen."
+            exit 0
+          fi
+          git checkout -B update/bellen
+          git commit -m "Update control Codespace from e-St/bellen"
+          git push -u origin update/bellen --force
+          n=$(gh pr list --head update/bellen --state open --json number --jq '.[0].number // empty')
+          if [ -n "$n" ]; then
+            echo "Updated PR #$n"
+            gh pr view "$n" --web || true
+          else
+            gh pr create \
+              --title "Update control Codespace from bellen" \
+              --body "Applies the latest files from [e-St/bellen](https://github.com/e-St/bellen) (image, devcontainer, post-start, Dependabot, AGENTS, README). Keeps \`containerEnv.REPOS\`. Merge, then **rebuild** the Codespace (not Restart)."
+          fi
